@@ -150,3 +150,54 @@ public string Status
     
     
 }
+    . تعريف الـ Delegate لتحديد شكل دالة الاستجابة للحدث
+public delegate void MaintenanceStatusChangedHandler(string deviceSerial, string statusMessage);
+
+public class MaintenanceManager
+{
+    // 2. تعريف الـ Event باستخدام الـ Delegate المعرف أعلاه
+    public event MaintenanceStatusChangedHandler OnStatusChanged;
+
+    // خاصية لرقم الجهاز التسلسلي (لأغراض التوضيح)
+    public string SerialNumber { get; }
+    public string CurrentStatus { get; private set; }
+
+    public MaintenanceManager(string serialNumber)
+    {
+        SerialNumber = serialNumber;
+        CurrentStatus = "قيد التشخيص";
+    }
+
+    // 3. دالة لتحديث حالة الصيانة وإطلاق الحدث عند تغير الحالة
+    public void UpdateStatus(string newStatus)
+    {
+        CurrentStatus = newStatus;
+
+        // التحقق من أن هناك من يستمع للأحداث قبل إطلاقها
+        if (OnStatusChanged != null)
+        {
+            // إطلاق الحدث وإرسال التفاصيل (رقم الجهاز وحالة الصيانة الجديدة)
+            OnStatusChanged(SerialNumber, $"تحديث حالة الجهاز ذو الرقم التسلسلي [{SerialNumber}]: أصبحت الحالة -> {CurrentStatus}");
+        }
+    }
+}
+
+// فئة لاختبار وتشغيل الحدث (مثال استهلاكي)
+public class ProgramTest
+{
+    public static void Main()
+    {
+        // إنشاء كائن لإدارة صيانة جهاز معين
+        MaintenanceManager deviceMaintenance = new MaintenanceManager("REF-90812");
+
+        // الاشتراك في الحدث (Registering to the Event)
+        deviceMaintenance.OnStatusChanged += (serial, message) =>
+        {
+            Console.WriteLine("[إشعار نظام الصيانة]: " + message);
+        };
+
+        // تغيير حالة الجهاز لتفعيل الحدث تلقائياً
+        deviceMaintenance.UpdateStatus("اكتمل الإصلاح بنجاح وجاهز للتسليم");
+    }
+}
+
