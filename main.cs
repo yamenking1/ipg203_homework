@@ -3,201 +3,301 @@ using System.Collections.Generic;
 
 namespace homework
 {
-    // ===== 1. Abstraction: interface =====
-    interface IDeviceSharedValues
+    // ===== 4. Delegate: shape of the method that reacts to a status change =====
+    public delegate void StatusChangedHandler(string serialNumber, string message);
+
+    // ===== 5. Static class: checks the data before it is used =====
+    public static class Validator
     {
-        void preformMaintainces();
-        void repaireCompleted();
+        public static bool IsValidSerial(string serial)
+        {
+            // Example of a valid serial: REF-90812
+            if (serial == null || serial.Length < 5)
+            {
+                return false;
+            }
+
+            // The serial must have a dash in it
+            for (int i = 0; i < serial.Length; i++)
+            {
+                if (serial[i] == '-')
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool IsValidName(string name)
+        {
+            return name != null && name != "";
+        }
+
+        public static bool IsValidRepairTime(int hours)
+        {
+            return hours > 0;
+        }
+    }
+
+    // ===== 1. Abstraction: interface =====
+    public interface IDevice
+    {
+        void PerformMaintenance();
+        void RepairCompleted();
+        int CalculateRepairCost();
     }
 
     // ===== 1. Abstraction: abstract class =====
-    abstract class DeviceShared : IDeviceSharedValues
+    public abstract class Device : IDevice
     {
-        public string Name { get; set; }
-        public int RepaireTime { get; set; }
+        // 5. Static fields behind the static properties
+        private static int totalDevices = 0;
+        private static int inRepairCount = 0;
+        private static int completedCount = 0;
 
-        // Each device stores its own name and repair time
-        protected DeviceShared(string name, int repaireTime)
+        // 3. Encapsulation: all fields are private
+        private readonly string serialNumber;
+        private string name;
+        private int repairTime;
+        private string status;
+
+        // 4. Event: raised when the status changes
+        public event StatusChangedHandler OnStatusChanged;
+
+        protected Device(string serialNumber, string name, int repairTime)
         {
+            if (Validator.IsValidSerial(serialNumber))
+            {
+                this.serialNumber = serialNumber;
+            }
+            else
+            {
+                Console.WriteLine("Invalid serial number, using UNKNOWN-0");
+                this.serialNumber = "UNKNOWN-0";
+            }
+
             Name = name;
-            RepaireTime = repaireTime;
+            RepairTime = repairTime;
+            status = "Received";
+            totalDevices++;
         }
 
-        public void preformMaintainces()
+        // 5. Static properties
+        public static int TotalDevices
         {
-            Console.WriteLine(Name + " In Repaire");
+            get { return totalDevices; }
         }
 
-        public void repaireCompleted()
+        public static int InRepairCount
         {
-            Console.WriteLine(Name + " repaire completed");
+            get { return inRepairCount; }
         }
 
-        // Abstract: every device calculates its cost differently
-        public abstract int calclulateRepaireCost();
+        public static int CompletedCount
+        {
+            get { return completedCount; }
+        }
+
+        // Read-only: can only be set in the constructor
+        public string SerialNumber
+        {
+            get { return serialNumber; }
+        }
+
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                if (Validator.IsValidName(value))
+                {
+                    name = value;
+                }
+                else
+                {
+                    name = "Unknown device";
+                }
+            }
+        }
+
+        public int RepairTime
+        {
+            get { return repairTime; }
+            set
+            {
+                if (Validator.IsValidRepairTime(value))
+                {
+                    repairTime = value;
+                }
+                else
+                {
+                    repairTime = 1;
+                }
+            }
+        }
+
+        // Only the device itself can change its status
+        public string Status
+        {
+            get { return status; }
+            private set { status = value; }
+        }
+
+        // Every device type calculates its cost differently
+        public abstract int CalculateRepairCost();
+        public void PerformMaintenance()
+        {
+            if (Status != "Received")
+            {
+                Console.WriteLine(Name + " is already in the repair process.");
+                return;
+            }
+
+            Status = "In Repair";
+            inRepairCount++;
+            RaiseStatusChanged(Name + " is now in repair.");
+        }
+
+        public void RepairCompleted()
+        {
+            if (Status != "In Repair")
+            {
+                Console.WriteLine(Name + " is not being repaired right now.");
+                return;
+            }
+
+            Status = "Completed";
+            inRepairCount--;
+            completedCount++;
+            RaiseStatusChanged(Name + " repair completed.");
+        }
+
+        private void RaiseStatusChanged(string message)
+        {
+            if (OnStatusChanged != null)
+            {
+                OnStatusChanged(SerialNumber, message);
+            }
+        }
     }
 
     // ===== 2. Inheritance + polymorphism: 3 subclasses =====
-    class Refregaritor : DeviceShared
+    public class Refrigerator : Device
     {
-        public Refregaritor(string name, int repaireTime) : base(name, repaireTime) { }
+        public Refrigerator(string serialNumber, string name, int repairTime)
+            : base(serialNumber, name, repairTime) { }
 
-        public override int calclulateRepaireCost()
+        public override int CalculateRepairCost()
         {
-            return 50 + (RepaireTime * 30);
+            return 50 + (RepairTime * 30);
         }
     }
 
-    class WashingMaching : DeviceShared
+    public class WashingMachine : Device
     {
-        public WashingMaching(string name, int repaireTime) : base(name, repaireTime) { }
+        public WashingMachine(string serialNumber, string name, int repairTime)
+            : base(serialNumber, name, repairTime) { }
 
-        public override int calclulateRepaireCost()
+        public override int CalculateRepairCost()
         {
-            return 40 + (RepaireTime * 25);
+            return 40 + (RepairTime * 25);
         }
     }
 
-    class Aircondetioner : DeviceShared
+    public class AirConditioner : Device
     {
-        public Aircondetioner(string name, int repaireTime) : base(name, repaireTime) { }
+        public AirConditioner(string serialNumber, string name, int repairTime)
+            : base(serialNumber, name, repairTime) { }
 
-        public override int calclulateRepaireCost()
+        public override int CalculateRepairCost()
         {
-            return 30 + (RepaireTime * 20);
+            return 30 + (RepairTime * 20);
         }
     }
 
     // ===== Main class: list of the base type =====
-    class RepairCenter
+    public class RepairCenter
     {
-        private List<DeviceShared> _devices = new List<DeviceShared>();
+        private List<Device> devices = new List<Device>();
 
-        public void AddAppliance(DeviceShared device)
+        public void AddDevice(Device device)
         {
-            _devices.Add(device);
+            devices.Add(device);
         }
 
-        public int TotalRepaireCost()
+        public int TotalRepairCost()
         {
             int total = 0;
-            foreach (DeviceShared d in _devices)
+            foreach (Device d in devices)
             {
-                total += d.calclulateRepaireCost();   // each device runs its own version
+                total += d.CalculateRepairCost();   // each device runs its own version
             }
-            return total;                              // return AFTER the loop
+            return total;
         }
 
         public void PrintAll()
         {
-            foreach (DeviceShared d in _devices)
+            foreach (Device d in devices)
             {
-                Console.WriteLine(d.Name + " cost: " + d.calclulateRepaireCost());
+                Console.WriteLine(d.Name + " [" + d.SerialNumber + "] - " + d.Status + " - cost: " + d.CalculateRepairCost());
+            }
+        }
+
+        public void PrintByStatus(string status)
+        {
+            Console.WriteLine("Devices with status " + status + ":");
+            foreach (Device d in devices)
+            {
+                if (d.Status == status)
+                {
+                    Console.WriteLine("  " + d.Name);
+                }
             }
         }
     }
 
     class Program
     {
+        // Method that matches the delegate and reacts to the event
+        static void ShowNotification(string serialNumber, string message)
+        {
+            Console.WriteLine("[Notification " + serialNumber + "]: " + message);
+        }
+
         static void Main(string[] args)
         {
             RepairCenter center = new RepairCenter();
 
-            Refregaritor fridge = new Refregaritor("Fridge", 3);
-            WashingMaching washer = new WashingMaching("Washer", 2);
-            Aircondetioner ac = new Aircondetioner("AC", 4);
+            Refrigerator fridge = new Refrigerator("REF-90812", "Fridge", 3);
+            WashingMachine washer = new WashingMachine("WSH-10455", "Washer", 2);
+            AirConditioner ac = new AirConditioner("AIR-20731", "AC", 4);
 
-            center.AddAppliance(fridge);
-            center.AddAppliance(washer);
-            center.AddAppliance(ac);
+            // Subscribe to the event
+            fridge.OnStatusChanged += ShowNotification;
+            washer.OnStatusChanged += ShowNotification;
+            ac.OnStatusChanged += ShowNotification;
 
-            fridge.preformMaintainces();
-            fridge.repaireCompleted();
+            center.AddDevice(fridge);
+            center.AddDevice(washer);
+            center.AddDevice(ac);
 
+            fridge.PerformMaintenance();
+            washer.PerformMaintenance();
+            washer.RepairCompleted();
+            Console.WriteLine();
             center.PrintAll();
-            Console.WriteLine("Total cost: " + center.TotalRepaireCost());
-      
-      }
-        // ===== 3. Encapsulation (التغليف) =====
 
-// (Private Fields)  
-private readonly string _serialNumber;
-private string _name;
-private int _repairTime;
-private string _status;
+            Console.WriteLine();
+            center.PrintByStatus("In Repair");
+            center.PrintByStatus("Completed");
 
-//  (Properties)
-public string SerialNumber => _serialNumber; //(Read-Only)
-
-public string Name
-{
-    get => _name;
-    set => _name = !string.IsNullOrEmpty(value) ? value : "جهاز غير معروف";
-}
-
-public int RepairTime
-{
-    get => _repairTime;
-    set => _repairTime = value >= 0 ? value : 0; 
-
-public string Status
-{
-    get => _status;
-    // جعل الـ set خاصاً لحماية الحالة من التعديل العشوائي الخارجي
-    private set => _status = value; 
-}
-    }
-    
-    
-}
-    . تعريف الـ Delegate لتحديد شكل دالة الاستجابة للحدث
-public delegate void MaintenanceStatusChangedHandler(string deviceSerial, string statusMessage);
-
-public class MaintenanceManager
-{
-    // 2. تعريف الـ Event باستخدام الـ Delegate المعرف أعلاه
-    public event MaintenanceStatusChangedHandler OnStatusChanged;
-
-    // خاصية لرقم الجهاز التسلسلي (لأغراض التوضيح)
-    public string SerialNumber { get; }
-    public string CurrentStatus { get; private set; }
-
-    public MaintenanceManager(string serialNumber)
-    {
-        SerialNumber = serialNumber;
-        CurrentStatus = "قيد التشخيص";
-    }
-
-    // 3. دالة لتحديث حالة الصيانة وإطلاق الحدث عند تغير الحالة
-    public void UpdateStatus(string newStatus)
-    {
-        CurrentStatus = newStatus;
-
-        // التحقق من أن هناك من يستمع للأحداث قبل إطلاقها
-        if (OnStatusChanged != null)
-        {
-            // إطلاق الحدث وإرسال التفاصيل (رقم الجهاز وحالة الصيانة الجديدة)
-            OnStatusChanged(SerialNumber, $"تحديث حالة الجهاز ذو الرقم التسلسلي [{SerialNumber}]: أصبحت الحالة -> {CurrentStatus}");
+            Console.WriteLine();
+            Console.WriteLine("Total devices: " + Device.TotalDevices);
+            Console.WriteLine("In repair: " + Device.InRepairCount);
+            Console.WriteLine("Completed: " + Device.CompletedCount);
+            Console.WriteLine("Total cost: " + center.TotalRepairCost());
         }
     }
 }
 
-// فئة لاختبار وتشغيل الحدث (مثال استهلاكي)
-public class ProgramTest
-{
-    public static void Main()
-    {
-        // إنشاء كائن لإدارة صيانة جهاز معين
-        MaintenanceManager deviceMaintenance = new MaintenanceManager("REF-90812");
-
-        // الاشتراك في الحدث (Registering to the Event)
-        deviceMaintenance.OnStatusChanged += (serial, message) =>
-        {
-            Console.WriteLine("[إشعار نظام الصيانة]: " + message);
-        };
-
-        // تغيير حالة الجهاز لتفعيل الحدث تلقائياً
-        deviceMaintenance.UpdateStatus("اكتمل الإصلاح بنجاح وجاهز للتسليم");
-    }
-}
-
+    
