@@ -11,13 +11,13 @@ namespace homework
     {
         public static bool IsValidSerial(string serial)
         {
-            // Example of a valid serial: REF-90812
+            
             if (serial == null || serial.Length < 5)
             {
                 return false;
             }
 
-            // The serial must have a dash in it
+            
             for (int i = 0; i < serial.Length; i++)
             {
                 if (serial[i] == '-')
@@ -50,18 +50,18 @@ namespace homework
     1. Abstraction: abstract class 
     public abstract class Device : IDevice
     {
-        // 5. Static fields behind the static properties
+        
         private static int totalDevices = 0;
         private static int inRepairCount = 0;
         private static int completedCount = 0;
 
-        // 3. Encapsulation: all fields are private
+        
         private readonly string serialNumber;
         private string name;
         private int repairTime;
         private string status;
 
-        // 4. Event: raised when the status changes
+        
         public event StatusChangedHandler OnStatusChanged;
 
         protected Device(string serialNumber, string name, int repairTime)
@@ -82,7 +82,7 @@ namespace homework
             totalDevices++;
         }
 
-        // 5. Static properties
+        
         public static int TotalDevices
         {
             get { return totalDevices; }
@@ -98,7 +98,7 @@ namespace homework
             get { return completedCount; }
         }
 
-        // Read-only: can only be set in the constructor
+        
         public string SerialNumber
         {
             get { return serialNumber; }
@@ -136,14 +136,14 @@ namespace homework
             }
         }
 
-        // Only the device itself can change its status
+        
         public string Status
         {
             get { return status; }
             private set { status = value; }
         }
 
-        // Every device type calculates its cost differently
+        
         public abstract int CalculateRepairCost();
 
         public void PerformMaintenance()
@@ -216,7 +216,7 @@ namespace homework
         }
     }
 
-    // ===== Main class: list of the base type =====
+    
     public class RepairCenter
     {
         private List<Device> devices = new List<Device>();
@@ -226,7 +226,7 @@ namespace homework
             devices.Add(device);
         }
 
-        // Looks for a device by its serial number, returns null if not found
+        
         public Device FindDevice(string serial)
         {
             foreach (Device d in devices)
@@ -244,7 +244,7 @@ namespace homework
             int total = 0;
             foreach (Device d in devices)
             {
-                total += d.CalculateRepairCost();   // each device runs its own version
+                total += d.CalculateRepairCost();   
             }
             return total;
         }
@@ -272,7 +272,7 @@ namespace homework
 
     class Program
     {
-        // Method that matches the delegate and reacts to the event
+        
         static void ShowNotification(string serialNumber, string message)
         {
             Console.WriteLine("[Notification " + serialNumber + "]: " + message);
