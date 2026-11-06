@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace homework
 {
-    // ===== 4. Delegate: shape of the method that reacts to a status change =====
+     4. Delegate: shape of the method that reacts to a status change 
     public delegate void StatusChangedHandler(string serialNumber, string message);
 
-    // ===== 5. Static class: checks the data before it is used =====
+     5. Static class: checks the data before it is used 
     public static class Validator
     {
         public static bool IsValidSerial(string serial)
@@ -39,7 +39,7 @@ namespace homework
         }
     }
 
-    // ===== 1. Abstraction: interface =====
+     1. Abstraction: interface 
     public interface IDevice
     {
         void PerformMaintenance();
@@ -47,7 +47,7 @@ namespace homework
         int CalculateRepairCost();
     }
 
-    // ===== 1. Abstraction: abstract class =====
+    1. Abstraction: abstract class 
     public abstract class Device : IDevice
     {
         // 5. Static fields behind the static properties
@@ -145,6 +145,7 @@ namespace homework
 
         // Every device type calculates its cost differently
         public abstract int CalculateRepairCost();
+
         public void PerformMaintenance()
         {
             if (Status != "Received")
@@ -181,7 +182,7 @@ namespace homework
         }
     }
 
-    // ===== 2. Inheritance + polymorphism: 3 subclasses =====
+    2. Inheritance + polymorphism: 3 subclasses 
     public class Refrigerator : Device
     {
         public Refrigerator(string serialNumber, string name, int repairTime)
@@ -223,6 +224,19 @@ namespace homework
         public void AddDevice(Device device)
         {
             devices.Add(device);
+        }
+
+        // Looks for a device by its serial number, returns null if not found
+        public Device FindDevice(string serial)
+        {
+            foreach (Device d in devices)
+            {
+                if (d.SerialNumber == serial)
+                {
+                    return d;
+                }
+            }
+            return null;
         }
 
         public int TotalRepairCost()
@@ -267,37 +281,139 @@ namespace homework
         static void Main(string[] args)
         {
             RepairCenter center = new RepairCenter();
+            bool running = true;
 
-            Refrigerator fridge = new Refrigerator("REF-90812", "Fridge", 3);
-            WashingMachine washer = new WashingMachine("WSH-10455", "Washer", 2);
-            AirConditioner ac = new AirConditioner("AIR-20731", "AC", 4);
+            while (running)
+            {
+                Console.WriteLine();
+                Console.WriteLine("===== Repair Center =====");
+                Console.WriteLine("1. Add a device");
+                Console.WriteLine("2. Calculate repair cost");
+                Console.WriteLine("3. Show if a device is prepared");
+                Console.WriteLine("4. Mark a device as fully prepared");
+                Console.WriteLine("5. Show devices still in repair");
+                Console.WriteLine("6. Show devices that are done");
+                Console.WriteLine("0. Quit");
+                Console.Write("Choose: ");
+                string choice = Console.ReadLine();
 
-            // Subscribe to the event
-            fridge.OnStatusChanged += ShowNotification;
-            washer.OnStatusChanged += ShowNotification;
-            ac.OnStatusChanged += ShowNotification;
+                switch (choice)
+                {
+                    case "1":
+                        Console.WriteLine("Type: 1 = Refrigerator, 2 = Washing machine, 3 = Air conditioner");
+                        Console.Write("Type: ");
+                        string type = Console.ReadLine();
 
-            center.AddDevice(fridge);
-            center.AddDevice(washer);
-            center.AddDevice(ac);
+                        Console.Write("Serial number (example REF-90812): ");
+                        string serial = Console.ReadLine();
+                        Console.Write("Name: ");
+                        string name = Console.ReadLine();
+                        Console.Write("Repair time in hours: ");
+                        int hours = int.Parse(Console.ReadLine());
 
-            fridge.PerformMaintenance();
-            washer.PerformMaintenance();
-            washer.RepairCompleted();
-            Console.WriteLine();
-            center.PrintAll();
+                        if (!Validator.IsValidSerial(serial))
+                        {
+                            Console.WriteLine("Invalid serial number, device not added.");
+                        }
+                        else if (center.FindDevice(serial) != null)
+                        {
+                            Console.WriteLine("A device with this serial number already exists.");
+                        }
+                        else if (type == "1")
+                        {
+                            Refrigerator fridge = new Refrigerator(serial, name, hours);
+                            fridge.OnStatusChanged += ShowNotification;
+                            center.AddDevice(fridge);
+                            Console.WriteLine("Refrigerator added.");
+                        }
+                        else if (type == "2")
+                        {
+                            WashingMachine washer = new WashingMachine(serial, name, hours);
+                            washer.OnStatusChanged += ShowNotification;
+                            center.AddDevice(washer);
+                            Console.WriteLine("Washing machine added.");
+                        }
+                        else if (type == "3")
+                        {
+                            AirConditioner ac = new AirConditioner(serial, name, hours);
+                            ac.OnStatusChanged += ShowNotification;
+                            center.AddDevice(ac);
+                            Console.WriteLine("Air conditioner added.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Unknown type, device not added.");
+                        }
+                        break;
 
-            Console.WriteLine();
-            center.PrintByStatus("In Repair");
-            center.PrintByStatus("Completed");
+                    case "2":
+                        Console.Write("Serial number: ");
+                        Device costDevice = center.FindDevice(Console.ReadLine());
+                        if (costDevice == null)
+                        {
+                            Console.WriteLine("Device not found.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(costDevice.Name + " repair cost: " + costDevice.CalculateRepairCost());
+                        }
+                        Console.WriteLine("Total cost of all devices: " + center.TotalRepairCost());
+                        break;
 
-            Console.WriteLine();
-            Console.WriteLine("Total devices: " + Device.TotalDevices);
-            Console.WriteLine("In repair: " + Device.InRepairCount);
-            Console.WriteLine("Completed: " + Device.CompletedCount);
-            Console.WriteLine("Total cost: " + center.TotalRepairCost());
+                    case "3":
+                        Console.Write("Serial number: ");
+                        Device statusDevice = center.FindDevice(Console.ReadLine());
+                        if (statusDevice == null)
+                        {
+                            Console.WriteLine("Device not found.");
+                        }
+                        else if (statusDevice.Status == "Completed")
+                        {
+                            Console.WriteLine(statusDevice.Name + " is prepared.");
+                        }
+                        else
+                        {
+                            Console.WriteLine(statusDevice.Name + " is not prepared yet (" + statusDevice.Status + ").");
+                        }
+                        break;
+
+                    case "4":
+                        Console.Write("Serial number: ");
+                        Device doneDevice = center.FindDevice(Console.ReadLine());
+                        if (doneDevice == null)
+                        {
+                            Console.WriteLine("Device not found.");
+                        }
+                        else
+                        {
+                            if (doneDevice.Status == "Received")
+                            {
+                                doneDevice.PerformMaintenance();
+                            }
+                            doneDevice.RepairCompleted();
+                        }
+                        break;
+
+                    case "5":
+                        Console.WriteLine("Devices in repair: " + Device.InRepairCount);
+                        center.PrintByStatus("In Repair");
+                        break;
+
+                    case "6":
+                        Console.WriteLine("Devices completed: " + Device.CompletedCount);
+                        center.PrintByStatus("Completed");
+                        break;
+
+                    case "0":
+                        running = false;
+                        Console.WriteLine("Goodbye.");
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid choice, try again.");
+                        break;
+                }
+            }
         }
     }
 }
-
-    
