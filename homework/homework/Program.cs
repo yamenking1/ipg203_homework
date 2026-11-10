@@ -1,23 +1,23 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace homework
 {
-    
+     4. Delegate: shape of the method that reacts to a status change 
     public delegate void StatusChangedHandler(string serialNumber, string message);
 
- 
+     5. Static class: checks the data before it is used 
     public static class Validator
     {
         public static bool IsValidSerial(string serial)
         {
-           
+            
             if (serial == null || serial.Length < 5)
             {
                 return false;
             }
 
-          
+            
             for (int i = 0; i < serial.Length; i++)
             {
                 if (serial[i] == '-')
@@ -39,14 +39,15 @@ namespace homework
         }
     }
 
-    
+     1. Abstraction: interface 
     public interface IDevice
     {
+        void PerformMaintenance();
         void RepairCompleted();
         int CalculateRepairCost();
     }
 
-   
+    1. Abstraction: abstract class 
     public abstract class Device : IDevice
     {
         
@@ -60,7 +61,7 @@ namespace homework
         private int repairTime;
         private string status;
 
-       
+        
         public event StatusChangedHandler OnStatusChanged;
 
         protected Device(string serialNumber, string name, int repairTime)
@@ -77,13 +78,11 @@ namespace homework
 
             Name = name;
             RepairTime = repairTime;
-         
-            status = "In Repair";
+            status = "Received";
             totalDevices++;
-            inRepairCount++;
         }
 
-     
+        
         public static int TotalDevices
         {
             get { return totalDevices; }
@@ -144,14 +143,27 @@ namespace homework
             private set { status = value; }
         }
 
-     
+        
         public abstract int CalculateRepairCost();
+
+        public void PerformMaintenance()
+        {
+            if (Status != "Received")
+            {
+                Console.WriteLine(Name + " is already in the repair process.");
+                return;
+            }
+
+            Status = "In Repair";
+            inRepairCount++;
+            RaiseStatusChanged(Name + " is now in repair.");
+        }
 
         public void RepairCompleted()
         {
             if (Status != "In Repair")
             {
-                Console.WriteLine(Name + " is already completed.");
+                Console.WriteLine(Name + " is not being repaired right now.");
                 return;
             }
 
@@ -170,7 +182,7 @@ namespace homework
         }
     }
 
-    
+    2. Inheritance + polymorphism: 3 subclasses 
     public class Refrigerator : Device
     {
         public Refrigerator(string serialNumber, string name, int repairTime)
@@ -260,7 +272,7 @@ namespace homework
 
     class Program
     {
-       
+        
         static void ShowNotification(string serialNumber, string message)
         {
             Console.WriteLine("[Notification " + serialNumber + "]: " + message);
@@ -335,7 +347,6 @@ namespace homework
                         break;
 
                     case "2":
-                        Console.WriteLine("serial number have to be at least 5 charcter long with  - in it");
                         Console.Write("Serial number: ");
                         Device costDevice = center.FindDevice(Console.ReadLine());
                         if (costDevice == null)
@@ -375,6 +386,10 @@ namespace homework
                         }
                         else
                         {
+                            if (doneDevice.Status == "Received")
+                            {
+                                doneDevice.PerformMaintenance();
+                            }
                             doneDevice.RepairCompleted();
                         }
                         break;
