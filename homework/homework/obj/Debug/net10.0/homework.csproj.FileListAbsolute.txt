@@ -1,0 +1,14 @@
+/home/yamen/RiderProjects/homework/homework/bin/Debug/net10.0/homework
+/home/yamen/RiderProjects/homework/homework/bin/Debug/net10.0/homework.deps.json
+/home/yamen/RiderProjects/homework/homework/bin/Debug/net10.0/homework.runtimeconfig.json
+/home/yamen/RiderProjects/homework/homework/bin/Debug/net10.0/homework.dll
+/home/yamen/RiderProjects/homework/homework/bin/Debug/net10.0/homework.pdb
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.GeneratedMSBuildEditorConfig.editorconfig
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.AssemblyInfoInputs.cache
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.AssemblyInfo.cs
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.csproj.CoreCompileInputs.cache
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.dll
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/refint/homework.dll
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.pdb
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/homework.genruntimeconfig.cache
+/home/yamen/RiderProjects/homework/homework/obj/Debug/net10.0/ref/homework.dll
