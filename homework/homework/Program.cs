@@ -3,10 +3,7 @@ using System.Collections.Generic;
 
 namespace homework
 {
-     4. Delegate: shape of the method that reacts to a status change 
     public delegate void StatusChangedHandler(string serialNumber, string message);
-
-     5. Static class: checks the data before it is used 
     public static class Validator
     {
         public static bool IsValidSerial(string serial)
@@ -39,7 +36,6 @@ namespace homework
         }
     }
 
-     1. Abstraction: interface 
     public interface IDevice
     {
         void PerformMaintenance();
@@ -47,7 +43,6 @@ namespace homework
         int CalculateRepairCost();
     }
 
-    1. Abstraction: abstract class 
     public abstract class Device : IDevice
     {
         
@@ -182,7 +177,6 @@ namespace homework
         }
     }
 
-    2. Inheritance + polymorphism: 3 subclasses 
     public class Refrigerator : Device
     {
         public Refrigerator(string serialNumber, string name, int repairTime)
